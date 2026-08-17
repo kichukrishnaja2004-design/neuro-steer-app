@@ -3,174 +3,107 @@ import numpy as np
 import plotly.graph_objects as go
 import time
 
-st.set_page_config(page_title="NEURO-STEER AI", page_icon="🧠", layout="wide")
+st.set_page_config(page_title="NEURO-STEER AI Dashboard", layout="wide", page_icon="🧠")
 
-# Custom UI Styling
-st.markdown("""
-    <style>
-    .main { background-color: #0E1117; }
-    .stButton>button { width: 100%; border-radius: 8px; height: 3em; font-weight: bold; }
-    </style>
-""", unsafe_allow_html=True)
+st.title("🧠 NEURO-STEER AI : Dual-Mode Clinical Intervention Platform")
+st.caption("Photoacoustic-Guided & BCI Closed-Loop Magnetic Swarm Steering for Ischemic Stroke")
 
-# Main Title Header
-st.title("🧠 NEURO-STEER AI — Digital Twin & 3D Micro-Vascular Steering Platform")
-st.caption("Painless & Non-Invasive Targeted Nano-Swarm Navigation for Brain Stroke Intervention")
+# Sidebar Controls
+st.sidebar.header("🕹️ Operator & Telemetry Panel")
+patient_id = st.sidebar.selectbox("Select Patient Profile", ["PAT-2026-MCA-01 (Acute)", "PAT-2026-ACA-04 (Distal)"])
+laser_toggle = st.sidebar.toggle("Activate 808nm NIR Pulsed Laser", value=True)
+bci_focus = st.sidebar.slider("Operator Cognitive Focus (EEG Beta/Alpha Ratio %)", 0, 100, 78)
+auto_pilot = st.sidebar.checkbox("Enable AI Co-Pilot Shared Autonomy", value=True)
 
-st.divider()
-
-# --- SECTION 1: DIAGNOSTICS & SCANNING ---
-st.header("📋 Patient Diagnostic & 3D Clot Triangulation")
-
-col1, col2 = st.columns(2)
-
-with col1:
-    patient_id = st.text_input("Patient ID", "HACK-2026-NEURO-01")
-    protocol = st.selectbox(
-        "Scanning Protocol",
-        ["Photoacoustic Laser + Ultrasound Hybrid", "Real-Time Micro-MRI Triangulation", "CT Angiography Fusion"]
-    )
-
-with col2:
-    st.write("### Target Vascular Parameters")
-    if st.button("🔍 SCAN & TRIANGULATE 3D CLOT"):
-        with st.spinner("Processing 3D micro-vascular point cloud..."):
-            time.sleep(1.2)
-            st.success("Target Clot Locked Successfully!")
-            c1, c2, c3 = st.columns(3)
-            c1.metric("Coordinates (X,Y,Z)", "12.4, -4.2, 8.1 mm")
-            c2.metric("Vessel Radius", "180 µm")
-            c3.metric("Required Swarm", "250,000 Bots")
-
-st.divider()
-
-# --- SIDEBAR: OPERATOR & AI CONTROLS ---
-st.sidebar.header("🕹️ Operator & System Controls")
-
-# Mode Switch
-ai_mode = st.sidebar.toggle("🤖 Enable AI Autonomous Steering Mode", value=False)
-
-if ai_mode:
-    st.sidebar.info("AI Pathfinding Active: Auto-calculating optimal magnetic vectors.")
-    focus_level = 88
-    steering_angle = 15
+# Gating Logic
+if bci_focus >= 70:
+    control_status = "🟢 MANUAL BCI ACTIVE"
+    status_color = "success"
+    steering_authority = "Operator Direct Control"
 else:
-    focus_level = st.sidebar.slider("Brain Focus Level (%)", 0, 100, 75)
-    steering_angle = st.sidebar.slider("Steering Path Angle (°)", -90, 90, 0)
+    if auto_pilot:
+        control_status = "🟡 AI CO-PILOT ENGAGED (Fatigue Fallback)"
+        status_color = "warning"
+        steering_authority = "Reinforcement Learning Autonomous Agent"
+    else:
+        control_status = "🔴 STANDBY (Focus Below Threshold)"
+        status_color = "error"
+        steering_authority = "Thrusters Locked"
 
-injection_status = st.sidebar.button("🚀 INITIATE NANO-SWARM NAVIGATION")
+st.sidebar.markdown(f"**Current State:** :{status_color}[{control_status}]")
+st.sidebar.caption(f"Authority: {steering_authority}")
 
-# Helmet Coils Control
-st.sidebar.subheader("🧲 Helmet Coil Intensity (mT)")
-coil_1 = st.sidebar.slider("Coil 1 (North)", 0, 100, 45 if ai_mode else 40)
-coil_2 = st.sidebar.slider("Coil 2 (East)", 0, 100, 85 if ai_mode or steering_angle > 0 else 20)
-coil_3 = st.sidebar.slider("Coil 3 (South)", 0, 100, 15 if ai_mode else 10)
-coil_4 = st.sidebar.slider("Coil 4 (West)", 0, 100, 85 if ai_mode or steering_angle < 0 else 20)
+# Metrics Row
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("Acoustic Target Depth", "32.4 mm", "±0.2 mm")
+col2.metric("Targeting Efficiency", f"{min(92.4, 60 + (bci_focus*0.32)):.1f}%", "+4.2%")
+clot_dissolution = min(100, int((bci_focus / 100) * 88))
+col3.metric("Clot Dissolution Rate", f"{clot_dissolution}%", "Active" if laser_toggle else "Paused")
+col4.metric("Off-Target Exposure Risk", "< 12%", "-68% vs Systemic")
 
-# --- SECTION 2: 3D SIMULATION PANELS ---
-v_col1, v_col2 = st.columns(2)
+st.divider()
 
-# PANEL 1: 3D Brain Wave Signal Surface / Line
-with v_col1:
-    st.subheader("🧠 Live BCI Brain Signal Waveform")
-    time_series = np.linspace(0, 2, 200)
-    alpha_wave = np.sin(2 * np.pi * 10 * time_series) * (focus_level / 100)
-    beta_wave = np.sin(2 * np.pi * 20 * time_series) * (1 - focus_level / 100)
-    eeg_signal = alpha_wave + beta_wave + np.random.normal(0, 0.08, 200)
+# Main Layout: 3D Twin & Diagnostic Waves
+left_col, right_col = st.columns([1.2, 1])
 
-    fig_eeg = go.Figure()
-    fig_eeg.add_trace(go.Scatter(y=eeg_signal, mode='lines', name='Live Signal', line=dict(color='#00FFCC', width=2)))
-    fig_eeg.update_layout(
-        title=f"BCI Focus Signal ({focus_level}%)",
-        xaxis_title="Time Frame",
-        yaxis_title="Amplitude (µV)",
-        template="plotly_dark",
-        height=380
-    )
-    st.plotly_chart(fig_eeg, use_container_width=True)
+with left_col:
+    st.subheader("🌐 3D Vascular Digital Twin (Target Bifurcation)")
+    
+    # Generate Synthetic 3D Vessel Geometry
+    z_main = np.linspace(0, 10, 40)
+    x_main = np.zeros_like(z_main)
+    y_main = np.zeros_like(z_main)
 
-# PANEL 2: True 3D Blood Vessel & Nanoparticle Swarm Visualizer
-with v_col2:
-    st.subheader("🩸 3D Vascular Nanoparticle Swarm Visualizer")
+    z_branch = np.linspace(10, 18, 30)
+    x_branch = (z_branch - 10) * 0.5
+    y_branch = (z_branch - 10) * 0.2
 
-    # 3D Cylinder / Vessel Geometry
-    z_vessel = np.linspace(0, 10, 30)
-    theta = np.linspace(0, 2 * np.pi, 20)
-    theta_grid, z_grid = np.meshgrid(theta, z_vessel)
-    r = 2.0  # Vessel radius
-    x_vessel = r * np.cos(theta_grid)
-    y_vessel = r * np.sin(theta_grid)
+    # Particle Swarm Positioning based on focus
+    t_factor = bci_focus / 100.0
+    px = np.random.normal(x_branch[-1] * t_factor, 0.4, 60)
+    py = np.random.normal(y_branch[-1] * t_factor, 0.4, 60)
+    pz = np.random.normal(10 + (8 * t_factor), 0.5, 60)
 
     fig_3d = go.Figure()
+    
+    # Parent Vessel
+    fig_3d.add_trace(go.Scatter3d(x=x_main, y=y_main, z=z_main, mode='lines',
+                                 line=dict(color='crimson', width=12), name='Main MCA Vessel'))
+    # Occluded Branch
+    fig_3d.add_trace(go.Scatter3d(x=x_branch, y=y_branch, z=z_branch, mode='lines',
+                                 line=dict(color='darkred', width=8), name='Occluded Branch'))
+    # Clot Location
+    fig_3d.add_trace(go.Scatter3d(x=[x_branch[-1]], y=[y_branch[-1]], z=[z_branch[-1]], mode='markers',
+                                 marker=dict(size=14, color='purple', opacity=0.8), name='Thrombus (Clot)'))
+    # Ferrofluid Swarm
+    fig_3d.add_trace(go.Scatter3d(x=px, y=py, z=pz, mode='markers',
+                                 marker=dict(size=4, color='cyan', opacity=0.9), name='SPION Swarm'))
 
-    # Render Vessel Mesh Wall
-    fig_3d.add_trace(go.Surface(
-        x=x_vessel, y=y_vessel, z=z_grid,
-        opacity=0.15,
-        colorscale='Reds',
-        showscale=False,
-        name='Vessel Wall'
-    ))
-
-    # Render 3D Blood Clot (Thrombus Target)
-    fig_3d.add_trace(go.Scatter3d(
-        x=[0], y=[0], z=[8.5],
-        mode='markers',
-        marker=dict(size=18, color='darkred', symbol='diamond'),
-        name='Blood Clot Target'
-    ))
-
-    # Render 3D Nanoparticle Swarm Positions
-    num_particles = 40
-    if injection_status:
-        np_z = np.linspace(0.5, 8.0, num_particles)
-        np_x = (steering_angle / 90.0) * 1.2 + np.random.normal(0, 0.25, num_particles)
-        np_y = np.random.normal(0, 0.25, num_particles)
-    else:
-        np_z = np.full(num_particles, 0.5)
-        np_x = np.random.normal(0, 0.2, num_particles)
-        np_y = np.random.normal(0, 0.2, num_particles)
-
-    fig_3d.add_trace(go.Scatter3d(
-        x=np_x, y=np_y, z=np_z,
-        mode='markers',
-        marker=dict(size=6, color='gold', symbol='circle'),
-        name='Nanoparticle Swarm'
-    ))
-
-    fig_3d.update_layout(
-        title=f"3D Path Angle: {steering_angle}° | Mode: {'AI AUTONOMOUS 🤖' if ai_mode else 'MANUAL 🕹️'}",
-        scene=dict(
-            xaxis=dict(range=[-3, 3], title='X (mm)'),
-            yaxis=dict(range=[-3, 3], title='Y (mm)'),
-            zaxis=dict(range=[0, 10], title='Vessel Length (mm)'),
-            aspectmode='manual',
-            aspectratio=dict(x=1, y=1, z=2)
-        ),
-        template="plotly_dark",
-        height=380
-    )
+    fig_3d.update_layout(scene=dict(xaxis_title='X (mm)', yaxis_title='Y (mm)', zaxis_title='Z (Depth mm)',
+                                    bgcolor='#0E1117'),
+                         margin=dict(l=0, r=0, b=0, t=0), height=420, template="plotly_dark")
     st.plotly_chart(fig_3d, use_container_width=True)
 
-st.divider()
+with right_col:
+    st.subheader("📡 Photoacoustic & Coil Telemetry")
+    
+    # Photoacoustic Response Waveform
+    time_pts = np.linspace(0, 20, 200)
+    acoustic_wave = np.exp(-(time_pts - 8)**2 / 2) * np.sin(4 * np.pi * time_pts) if laser_toggle else np.random.normal(0, 0.05, 200)
+    
+    fig_pa = go.Figure()
+    fig_pa.add_trace(go.Scatter(x=time_pts, y=acoustic_wave, mode='lines', line=dict(color='#00D2FF', width=2), name="808nm Acoustic Pulse"))
+    fig_pa.update_layout(title="Transducer Time-of-Flight Acoustic Waveform", xaxis_title="Time (μs)", yaxis_title="Amplitude (mV)",
+                         height=210, margin=dict(l=20, r=20, t=30, b=20), template="plotly_dark")
+    st.plotly_chart(fig_pa, use_container_width=True)
 
-# --- SECTION 3: SAFETY MONITORING & CLINICAL REPORT ---
-m1, m2, m3, m4 = st.columns(4)
-m1.metric("Intracranial Pressure (ICP)", "11.2 mmHg", delta="Normal", delta_color="normal")
-m2.metric("Peak Field Strength", f"{max(coil_1, coil_2, coil_3, coil_4)} mT")
-m3.metric("Wall Shear Stress Risk", "LOW (0.12 Pa)", delta="Safe", delta_color="normal")
-m4.metric("Clot Disruption Efficiency", f"{int(focus_level * 0.96)}%")
+    # Coil Vector Actuation Progress
+    st.markdown("**Electromagnetic Coil Array Duty Cycle (PWM)**")
+    c1, c2 = st.columns(2)
+    c1.progress(int(bci_focus * 0.9), text=f"Coil 1 (Anterior): {int(bci_focus*0.9)}%")
+    c1.progress(int(bci_focus * 0.75), text=f"Coil 2 (Posterior): {int(bci_focus*0.75)}%")
+    c2.progress(int(bci_focus * 0.6), text=f"Coil 3 (Lateral Left): {int(bci_focus*0.6)}%")
+    c2.progress(int(bci_focus * 0.85), text=f"Coil 4 (Lateral Right): {int(bci_focus*0.85)}%")
 
-st.subheader("📑 Surgical Summary & Report")
-if st.button("📄 GENERATE SURGICAL SUMMARY REPORT"):
-    st.write("---")
-    st.success("✅ Procedure Summary Generated!")
-    st.json({
-        "Patient ID": patient_id,
-        "Target Location": "Middle Cerebral Artery (MCA) Branch 2",
-        "Mode Used": "AI Autonomous Steering" if ai_mode else "Manual BCI Steering",
-        "Average Focus Score": f"{focus_level}%",
-        "Peak Magnetic Field": f"{max(coil_1, coil_2, coil_3, coil_4)} mT",
-        "Clot Clearance Status": "98.7% Target Clearance Achieved",
-        "Safety Check": "No vessel shear stress threshold breached."
-    })
+st.success("System operational: Dual-mode bio-telemetry synchronized with digital twin.")
+    
